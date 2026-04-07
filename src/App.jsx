@@ -59,15 +59,18 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
-  const sendWhatsApp = (h) => {
-    // Generar lista de links de fotos
-    const fotosLink = h.imagenes && h.imagenes.length > 0 
-      ? h.imagenes.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('')
-      : '%0A📸 (Consultar fotos con el asesor)';
-
-    const msg = `*DK TU CASA*%0A📍 ${h.ubicacion}%0A🏠 *Modelo:* ${h.modelo}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras}%0A🚿 *Baños:* ${h.banos}%0A📐 *Terreno:* ${h.terreno}m2%0A🏠 *Const:* ${h.construccion}m2${fotosLink}`;
+ const sendWhatsApp = (h) => {
+    // La primera foto es la que genera la vista previa visual en el chat
+    const fotoPrincipal = h.imagenes && h.imagenes.length > 0 ? h.imagenes[0] : '';
     
-    // CAMBIA EL NÚMERO ABAJO POR EL TUYO
+    // Listamos las demás fotos si existen
+    const otrasFotos = h.imagenes && h.imagenes.length > 1 
+      ? h.imagenes.slice(1).map((img, i) => `%0A📸 Foto ${i+2}: ${img}`).join('')
+      : '';
+
+    const msg = `*DK TU CASA*%0A%0A🏡 *Modelo:* ${h.modelo}%0A📍 *Ubicación:* ${h.ubicacion}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno}m2 | 🏠 *C:* ${h.construccion}m2%0A%0A🖼️ *VER FOTOS AQUÍ:*%0A${fotoPrincipal}${otrasFotos}`;
+    
+    // REEMPLAZA EL NÚMERO ABAJO POR EL TUYO (52 + 10 dígitos)
     window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
   };
 
