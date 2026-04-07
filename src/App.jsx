@@ -3,7 +3,7 @@ import { db, auth } from "./firebase";
 import { collection, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
-// CONFIGURACIÓN DE CLOUDINARY (CAMBIA ESTO)
+// CONFIGURACIÓN DE CLOUDINARY (REVISA TU DASHBOARD)
 const CLOUD_NAME = "dp4m3p0do"; 
 const UPLOAD_PRESET = "unsigned_preset"; 
 
@@ -32,16 +32,13 @@ export default function App() {
     return () => { unsubAuth(); unsubHouses(); };
   }, []);
 
-  // SUBIR FOTOS A CLOUDINARY (GRATIS)
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
-
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
       const data = await res.json();
@@ -53,9 +50,8 @@ export default function App() {
   const saveHouse = async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
-    // Guardamos todas las fotos subidas
+    // Fusionar fotos viejas con las nuevas subidas en esta sesión
     data.imagenes = editing ? [...(editing.imagenes || []), ...tempImages] : tempImages;
-
     try {
       if (editing) await updateDoc(doc(db, "houses", editing.id), data);
       else await addDoc(collection(db, "houses"), data);
@@ -64,18 +60,26 @@ export default function App() {
   };
 
   const sendWhatsApp = (h) => {
-    const msg = `*DK TU CASA*%0A📍 ${h.ubicacion}%0A🏠 Modelo: ${h.modelo}%0A💰 Precio: ${h.precio}%0A📸 Fotos: ${h.imagenes?.join(', ')}`;
-    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank"); // Cambia el número
+    // Generar lista de links de fotos
+    const fotosLink = h.imagenes && h.imagenes.length > 0 
+      ? h.imagenes.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('')
+      : '%0A📸 (Consultar fotos con el asesor)';
+
+    const msg = `*DK TU CASA*%0A📍 ${h.ubicacion}%0A🏠 *Modelo:* ${h.modelo}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras}%0A🚿 *Baños:* ${h.banos}%0A📐 *Terreno:* ${h.terreno}m2%0A🏠 *Const:* ${h.construccion}m2${fotosLink}`;
+    
+    // CAMBIA EL NÚMERO ABAJO POR EL TUYO
+    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
   };
 
   if (!user) return (
     <div style={s.loginContainer}>
       <div style={s.loginCard}>
-        <h2 style={{color: '#00BFFF'}}>DK TU CASA</h2>
+        <h2 style={{color: '#00BFFF', fontWeight: '800', fontSize: '28px'}}>DK TU CASA</h2>
+        <p style={{color: '#64748b', marginBottom: '20px'}}>Panel de Inventario</p>
         <form onSubmit={(e) => { e.preventDefault(); signInWithEmailAndPassword(auth, email, password); }}>
-          <input type="email" placeholder="Correo" style={s.input} onChange={e => setEmail(e.target.value)} />
+          <input type="email" placeholder="Correo electrónico" style={s.input} onChange={e => setEmail(e.target.value)} />
           <input type="password" placeholder="Contraseña" style={s.input} onChange={e => setPassword(e.target.value)} />
-          <button style={s.btnPrimary}>Entrar</button>
+          <button style={s.btnPrimary}>Entrar al Sistema</button>
         </form>
       </div>
     </div>
@@ -84,31 +88,44 @@ export default function App() {
   return (
     <div style={s.container}>
       <header style={s.header}>
-        <h1 style={{color: '#00BFFF', fontWeight: '800'}}>DK TU CASA</h1>
-        <div>
-          {user.role === 'admin' && <button onClick={() => setShowModal(true)} style={s.btnAdmin}>+ Nueva Casa</button>}
-          <button onClick={() => signOut(auth)} style={s.btnOut}>Salir</button>
+        <div style={{flex: 1}}>
+          <h1 style={s.headerTitle}>DK TU CASA</h1>
+          <p style={s.headerSubtitle}>Inventario de Propiedades | Hola, {user.email}</p>
+        </div>
+        <div style={{display: 'flex', gap: '8px'}}>
+          {user.role === 'admin' && <button onClick={() => setShowModal(true)} style={s.btnAdmin}>+ Nueva Propiedad</button>}
+          <button onClick={() => signOut(auth)} style={s.btnOut}>Cerrar Sesión</button>
         </div>
       </header>
 
-      <input placeholder="Buscar casa..." style={s.search} onChange={e => setSearch(e.target.value)} />
+      <input placeholder="Buscar por modelo, zona, precio..." style={s.search} onChange={e => setSearch(e.target.value)} />
 
       <div style={s.grid}>
         {houses.filter(h => h.modelo.toLowerCase().includes(search.toLowerCase())).map(h => (
           <div key={h.id} style={s.card}>
-            <div style={s.imgContainer}>
-              <img src={h.imagenes?.[0]} style={s.img} />
-              <span style={s.priceTag}>${h.precio}</span>
-            </div>
-            <div style={s.content}>
-              <h3 style={{margin: '0 0 5px 0'}}>{h.modelo}</h3>
-              <p style={{fontSize: '13px', color: '#64748b'}}>📍 {h.ubicacion}</p>
-              <div style={s.details}>
-                <span>🛏️ {h.recamaras}</span><span>🚿 {h.banos}</span><span>📐 {h.terreno}m²</span>
+            <img src={h.imagenes?.[0] || "https://via.placeholder.com/400x250?text=DK+TU+CASA"} style={s.img} />
+            <div style={s.cardBody}>
+              <div style={s.cardHeaderLine}>
+                <h2 style={s.cardTitle}>{h.modelo}</h2>
+                <span style={s.cardPrice}>${h.precio}</span>
               </div>
-              <div style={{display: 'flex', gap: '8px'}}>
+              <p style={s.cardLoc}>📍 {h.ubicacion}</p>
+              
+              <div style={s.divider}></div>
+
+              <div style={s.detailsRow}>
+                <div style={s.detCol}><strong>{h.recamaras}</strong><small>Hab.</small></div>
+                <div style={s.detCol}><strong>{h.banos}</strong><small>Baños</small></div>
+                <div style={s.detCol}><strong>{h.niveles || '1'}</strong><small>Niv.</small></div>
+                <div style={s.detCol}><strong>{h.terreno}m2</strong><small>T. m²</small></div>
+                <div style={s.detCol}><strong>{h.construccion}m2</strong><small>C. m²</small></div>
+              </div>
+
+              {h.promocion && <div style={s.promoBox}>🎁 Promoción: {h.promocion}</div>}
+
+              <div style={{display: 'flex', gap: '10px', marginTop: '15px'}}>
                 <button onClick={() => sendWhatsApp(h)} style={s.btnWa}>WhatsApp</button>
-                {user.role === 'admin' && <button onClick={() => {setEditing(h); setShowModal(true)}} style={s.btnEd}>Editar</button>}
+                {user.role === 'admin' && <button onClick={() => {setEditing(h); setShowModal(true)}} style={s.btnEd}>Editar Información</button>}
               </div>
             </div>
           </div>
@@ -118,22 +135,25 @@ export default function App() {
       {showModal && (
         <div style={s.overlay}>
           <form onSubmit={saveHouse} style={s.modal}>
-            <h3>{editing ? "Editar" : "Nueva Propiedad"}</h3>
-            <div style={{border: '2px dashed #00BFFF', padding: '10px', textAlign: 'center', marginBottom: '15px'}}>
-              <input type="file" accept="image/*" onChange={handleUpload} />
-              {uploading && <p>Subiendo foto... ⏳</p>}
-              <p>Fotos listas: {tempImages.length + (editing?.imagenes?.length || 0)}</p>
+            <h3 style={{marginBottom: '20px'}}>{editing ? "Editar Propiedad" : "Nueva Propiedad"}</h3>
+            <div style={s.uploadZone}>
+              <input type="file" accept="image/*" onChange={handleUpload} style={{fontSize: '12px'}} />
+              {uploading && <p style={{fontSize: '12px', color: '#00BFFF'}}>Subiendo... ⏳</p>}
+              <p style={{fontSize: '11px', margin: '5px 0'}}>Fotos en esta propiedad: {tempImages.length + (editing?.imagenes?.length || 0)}</p>
             </div>
             <div style={s.formGrid}>
               <input name="modelo" placeholder="Modelo" defaultValue={editing?.modelo} required style={s.input} />
               <input name="ubicacion" placeholder="Ubicación" defaultValue={editing?.ubicacion} required style={s.input} />
               <input name="precio" placeholder="Precio" defaultValue={editing?.precio} required style={s.input} />
+              <input name="promocion" placeholder="Promoción" defaultValue={editing?.promocion} style={s.input} />
               <input name="recamaras" placeholder="Recámaras" defaultValue={editing?.recamaras} style={s.input} />
               <input name="banos" placeholder="Baños" defaultValue={editing?.banos} style={s.input} />
-              <input name="terreno" placeholder="Terreno m²" defaultValue={editing?.terreno} style={s.input} />
+              <input name="niveles" placeholder="Niveles (Pisos)" defaultValue={editing?.niveles} style={s.input} />
+              <input name="terreno" placeholder="Terreno m2" defaultValue={editing?.terreno} style={s.input} />
+              <input name="construccion" placeholder="Construcción m2" defaultValue={editing?.construccion} style={s.input} />
             </div>
-            <button type="submit" style={s.btnPrimary}>{uploading ? "Espera..." : "Guardar Todo"}</button>
-            <button type="button" onClick={() => {setShowModal(false); setTempImages([]); setEditing(null)}} style={{width: '100%', background: 'none', border: 'none', marginTop: '10px'}}>Cancelar</button>
+            <button type="submit" style={s.btnPrimary}>{uploading ? "Subiendo fotos..." : "Guardar Cambios"}</button>
+            <button type="button" onClick={() => {setShowModal(false); setTempImages([]); setEditing(null)}} style={s.btnCancel}>Cancelar</button>
           </form>
         </div>
       )}
@@ -142,25 +162,34 @@ export default function App() {
 }
 
 const s = {
-  container: { padding: '30px 15px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif', backgroundColor: '#F8FAFC' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  btnAdmin: { background: '#1A237E', color: 'white', padding: '10px 15px', borderRadius: '10px', border: 'none', fontWeight: 'bold' },
-  btnOut: { background: 'none', color: '#64748b', border: 'none', marginLeft: '10px' },
-  search: { width: '100%', padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', marginBottom: '30px', fontSize: '16px' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '25px' },
-  card: { background: 'white', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
-  imgContainer: { position: 'relative', height: '200px' },
-  img: { width: '100%', height: '100%', objectFit: 'cover' },
-  priceTag: { position: 'absolute', bottom: '10px', left: '10px', background: '#00BFFF', color: 'white', padding: '5px 12px', borderRadius: '8px', fontWeight: 'bold' },
-  content: { padding: '15px' },
-  details: { display: 'flex', justifyContent: 'space-between', margin: '15px 0', fontSize: '14px', color: '#475569' },
-  btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '10px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' },
-  btnEd: { background: '#f1f5f9', border: '1px solid #ddd', padding: '10px', borderRadius: '10px' },
-  overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-  modal: { background: 'white', padding: '25px', borderRadius: '25px', width: '90%', maxWidth: '500px' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
-  input: { padding: '12px', borderRadius: '10px', border: '1px solid #ddd', width: '100%', boxSizing: 'border-box', marginBottom: '10px' },
-  btnPrimary: { width: '100%', background: '#1A237E', color: 'white', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold' },
-  loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f1f5f9' },
-  loginCard: { background: 'white', padding: '40px', borderRadius: '25px', textAlign: 'center', width: '350px' }
+  container: { padding: '30px 15px', maxWidth: '1200px', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '30px' },
+  headerTitle: { fontSize: '28px', fontWeight: '800', color: '#00BFFF', margin: 0 },
+  headerSubtitle: { fontSize: '13px', color: '#94a3b8', marginTop: '4px' },
+  btnAdmin: { background: '#1A237E', color: 'white', padding: '12px 16px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '14px' },
+  btnOut: { background: 'white', color: '#1A237E', padding: '12px 16px', border: '1px solid #E2E8F0', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px' },
+  search: { width: '100%', padding: '18px', borderRadius: '18px', border: 'none', background: '#000', color: 'white', marginBottom: '40px', fontSize: '15px' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '30px' },
+  card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' },
+  img: { width: '100%', height: '240px', objectFit: 'cover' },
+  cardBody: { padding: '20px' },
+  cardHeaderLine: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  cardTitle: { fontSize: '22px', fontWeight: '800', margin: 0 },
+  cardPrice: { fontSize: '22px', fontWeight: '800', color: '#00BFFF' },
+  cardLoc: { color: '#64748b', fontSize: '14px', marginTop: '5px' },
+  divider: { height: '1px', backgroundColor: '#F1F5F9', margin: '15px 0' },
+  detailsRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px' },
+  detCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '45px' },
+  promoBox: { background: '#E0F7FA', color: '#006064', padding: '12px', borderRadius: '12px', textAlign: 'center', fontWeight: '600', fontSize: '14px', marginBottom: '15px' },
+  btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: 'bold' },
+  btnEd: { flex: 2, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '12px', fontWeight: 'bold' },
+  overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' },
+  modal: { background: 'white', padding: '30px', borderRadius: '25px', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto' },
+  uploadZone: { border: '2px dashed #00BFFF', borderRadius: '15px', padding: '15px', textAlign: 'center', marginBottom: '20px' },
+  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
+  input: { padding: '12px', borderRadius: '10px', border: '1px solid #E2E8F0', width: '100%', boxSizing: 'border-box' },
+  btnPrimary: { width: '100%', background: '#1A237E', color: 'white', padding: '15px', borderRadius: '15px', border: 'none', fontWeight: 'bold', marginTop: '20px' },
+  btnCancel: { width: '100%', background: 'none', border: 'none', color: '#64748b', marginTop: '10px', cursor: 'pointer' },
+  loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F1F5F9' },
+  loginCard: { background: 'white', padding: '40px', borderRadius: '30px', textAlign: 'center', width: '380px' }
 };
