@@ -120,7 +120,7 @@ export default function App() {
           <form onSubmit={saveHouse} style={s.modal}>
             <h3>{editing ? "Editar" : "Nueva Propiedad"}</h3>
             <div style={{border: '2px dashed #00BFFF', padding: '10px', textAlign: 'center', marginBottom: '15px'}}>
-              <input type="file" accept="image/*" capture="environment" onChange={handleUpload} />
+              <input type="file" accept="image/*" onChange={handleUpload} />
               {uploading && <p>Subiendo foto... ⏳</p>}
               <p>Fotos listas: {tempImages.length + (editing?.imagenes?.length || 0)}</p>
             </div>
