@@ -77,15 +77,15 @@ export default function App() {
   const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
     const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
+    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
   };
 
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
+    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
   };
 
-  if (view === "welcome") return (
+  if (view === "welcome") return (****
     <div style={s.loginContainer}><div style={s.loginCard}>
         <h1 style={{color: '#00BFFF', fontWeight: '800', fontSize: '32px'}}>DK TU CASA</h1>
         <button onClick={() => setView("app")} style={s.btnPrimary}>Ver Catálogo (Cliente)</button>
