@@ -8,7 +8,7 @@ const CLOUD_NAME = "dp4m3p0do";
 const UPLOAD_PRESET = "unsigned_preset"; 
 
 export default function App() {
-  const [view, setView] = useState("welcome"); // welcome, app
+  const [view, setView] = useState("welcome"); // welcome, app, login
   const [user, setUser] = useState(null);
   const [houses, setHouses] = useState([]);
   const [filteredHouses, setFilteredHouses] = useState([]);
@@ -37,7 +37,6 @@ export default function App() {
     return () => { unsubAuth(); unsubHouses(); };
   }, []);
 
-  // LÓGICA DE BÚSQUEDA
   useEffect(() => {
     const results = houses.filter(h => 
       h.modelo?.toLowerCase().includes(search.toLowerCase()) ||
@@ -77,7 +76,6 @@ export default function App() {
     window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
   };
 
-  // 1. PANTALLA DE BIENVENIDA (VISTA DE CLIENTE)
   if (view === "welcome") return (
     <div style={s.loginContainer}><div style={s.loginCard}>
         <h1 style={{color: '#00BFFF', fontWeight: '800', fontSize: '32px'}}>DK TU CASA</h1>
@@ -86,7 +84,6 @@ export default function App() {
     </div></div>
   );
 
-  // 2. PANTALLA DE LOGIN
   if (view === "login" && !user) return (
     <div style={s.loginContainer}><div style={s.loginCard}>
         <h2 style={{color: '#1A237E', marginBottom: '20px'}}>Iniciar Sesión</h2>
@@ -112,7 +109,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* BARRA DE BÚSQUEDA BLANCA FUNCIONAL */}
       <input placeholder="Buscar por modelo, zona, precio..." style={s.search} value={search} onChange={e => setSearch(e.target.value)} />
 
       <div style={s.grid}>
@@ -143,22 +139,36 @@ export default function App() {
         ))}
       </div>
 
-      {/* MODAL DE MÁS INFORMACIÓN (DETALLES) */}
+      {/* MODAL DE MÁS INFORMACIÓN (DETALLES AMPLIADOS) */}
       {selectedHouse && (
         <div style={s.overlay} onClick={() => setSelectedHouse(null)}>
           <div style={s.detailModal} onClick={e => e.stopPropagation()}>
             <button style={s.closeBtn} onClick={() => setSelectedHouse(null)}>✕</button>
-            <img src={selectedHouse.imagenes?.[0]} style={{width: '100%', borderRadius: '15px', marginBottom: '15px'}} />
-            <h2 style={s.cardTitle}>{selectedHouse.modelo} - {selectedHouse.precio}</h2>
-            <p style={s.cardLoc}>📍 {selectedHouse.ubicacion}</p>
-            <div style={s.divider}></div>
-            <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Hermosa propiedad disponible en DK TU CASA."}</p>
-            <p><strong>Extras:</strong> {selectedHouse.amenidades || "Niveles: " + (selectedHouse.niveles || "1")}</p>
-            <div style={s.detailsRow}>
-                <div style={s.detCol}><strong>{selectedHouse.recamaras}</strong>Hab.</div>
-                <div style={s.detCol}><strong>{selectedHouse.banos}</strong>Baños</div>
-                <div style={s.detCol}><strong>{selectedHouse.terreno}m2</strong>Terreno</div>
+            <div style={s.carouselWrapperDetail}>
+                <div style={s.carouselContainer}>
+                    {selectedHouse.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} />)}
+                </div>
             </div>
+            <h2 style={s.cardTitle}>{selectedHouse.modelo}</h2>
+            <h3 style={s.cardPrice}>{selectedHouse.precio}</h3>
+            <p style={s.cardLoc}>📍 {selectedHouse.ubicacion}</p>
+            
+            <div style={s.divider}></div>
+            
+            {/* AQUÍ SE MUESTRAN LOS CAMPOS QUE FALTABAN */}
+            <div style={s.techGrid}>
+                <div style={s.techItem}><span>Pisos / Niveles:</span> <strong>{selectedHouse.niveles || "1"}</strong></div>
+                <div style={s.techItem}><span>Habitaciones:</span> <strong>{selectedHouse.recamaras || "0"}</strong></div>
+                <div style={s.techItem}><span>Baños:</span> <strong>{selectedHouse.banos || "0"}</strong></div>
+                <div style={s.techItem}><span>Terreno Total:</span> <strong>{selectedHouse.terreno || "0"} m²</strong></div>
+                <div style={s.techItem}><span>Construcción:</span> <strong>{selectedHouse.construccion || "0"} m²</strong></div>
+            </div>
+
+            <div style={s.divider}></div>
+            <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
+            
+            {selectedHouse.promocion && <div style={s.promoBox}>🎁 {selectedHouse.promocion}</div>}
+            
             <button onClick={() => sendWhatsApp(selectedHouse)} style={s.btnPrimary}>Solicitar Información por WhatsApp</button>
           </div>
         </div>
@@ -201,13 +211,13 @@ const s = {
   headerSubtitle: { fontSize: '12px', color: '#94a3b8' },
   btnAdmin: { background: '#1A237E', color: 'white', padding: '10px 14px', borderRadius: '12px', border: 'none', fontWeight: 'bold' },
   btnOut: { background: 'white', color: '#1A237E', padding: '10px 14px', border: '1px solid #E2E8F0', borderRadius: '12px' },
-  // BUSCADOR BLANCO
   search: { width: '100%', padding: '18px', borderRadius: '20px', border: '1px solid #E2E8F0', background: '#FFF', marginBottom: '30px', boxSizing: 'border-box', fontSize: '16px' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '25px' },
   card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', cursor: 'pointer' },
   carouselWrapper: { height: '220px', overflow: 'hidden' },
-  carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%' },
-  img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover' },
+  carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '20px' },
+  carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%', scrollSnapType: 'x mandatory' },
+  img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start' },
   cardBody: { padding: '18px' },
   cardHeaderLine: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: '20px', fontWeight: '800', margin: 0 },
@@ -216,13 +226,15 @@ const s = {
   divider: { height: '1px', backgroundColor: '#F1F5F9', margin: '15px 0' },
   detailsRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px' },
   detCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '14px' },
+  techGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
+  techItem: { fontSize: '14px', color: '#475569', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '5px' },
   promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '10px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
   btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   btnEd: { flex: 1, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' },
   modal: { background: 'white', padding: '25px', borderRadius: '30px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' },
   detailModal: { background: 'white', padding: '30px', borderRadius: '30px', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
-  closeBtn: { position: 'absolute', top: '15px', right: '15px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer' },
+  closeBtn: { position: 'absolute', top: '15px', right: '15px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', zIndex: 11 },
   uploadZone: { border: '2px dashed #00BFFF', borderRadius: '20px', padding: '15px', textAlign: 'center', marginBottom: '15px' },
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
   input: { padding: '12px', borderRadius: '12px', border: '1px solid #E2E8F0', width: '100%', boxSizing: 'border-box' },
@@ -230,5 +242,5 @@ const s = {
   btnSecondary: { width: '100%', background: 'white', color: '#1A237E', padding: '16px', borderRadius: '15px', border: '2px solid #1A237E', fontWeight: 'bold', fontSize: '16px', marginTop: '10px' },
   btnCancel: { width: '100%', background: 'none', border: 'none', color: '#64748b', marginTop: '10px' },
   loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC' },
-  loginCard: { background: 'white', padding: '40px', borderRadius: '40px', textAlign: 'center', width: '350px' }
+  loginCard: { background: 'white', padding: '40px', borderRadius: '40px', textAlign: 'center', width: '380px' }
 };
