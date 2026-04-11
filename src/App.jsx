@@ -19,10 +19,9 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [uploading, setUploading] = useState(false);
   const [tempImages, setTempImages] = useState([]);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Detectar si es celular o PC
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    // Detectar cambios de tamaño de pantalla en tiempo real
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
 
@@ -61,8 +60,8 @@ export default function App() {
     formData.append("upload_preset", UPLOAD_PRESET);
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
-      const data = res.json();
-      res.then(d => setTempImages([...tempImages, d.secure_url]));
+      const data = await res.json();
+      setTempImages([...tempImages, data.secure_url]);
     } catch (err) { alert("Error al subir foto"); }
     setUploading(false);
   };
@@ -78,15 +77,17 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
+  // FUNCIÓN 1: BOTÓN VERDE (PARA ENVIAR A CUALQUIERA - SIN NÚMERO FIJO)
   const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
     const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
+    window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
+  // FUNCIÓN 2: CONTACTO A DK (LINK AZUL - CON TU NÚMERO)
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
+    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank"); // <-- AQUÍ VA TU NÚMERO
   };
 
   if (view === "welcome") return (
@@ -124,7 +125,6 @@ export default function App() {
 
       <input placeholder="Buscar por modelo, zona, precio..." style={s.search} value={search} onChange={e => setSearch(e.target.value)} />
 
-      {/* REGLA MÁGICA DE COLUMNAS PARA PC vs CELULAR */}
       <div style={{...s.grid, gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(100%, 1fr))' : 'repeat(auto-fill, minmax(350px, 1fr))'}}>
         {filteredHouses.map(h => (
           <div key={h.id} style={s.card} onClick={() => setSelectedHouse(h)}>
@@ -132,7 +132,6 @@ export default function App() {
                 <div style={s.carouselContainer}>
                     {h.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} alt="" />)}
                 </div>
-                {/* INDICADOR DE MÁS FOTOS (🎁 Tu petición) */}
                 {h.imagenes?.length > 1 && (
                     <div style={s.carouselHint}>
                         Desliza ↔️ {h.imagenes.length} fotos más
@@ -222,7 +221,6 @@ export default function App() {
   );
 }
 
-// ESTILOS AJUSTADOS PARA AMBAS VISTAS
 const s = {
   container: { padding: '15px', maxWidth: '1200px', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh', overflowX: 'hidden' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' },
@@ -230,11 +228,11 @@ const s = {
   headerTitleMobile: { fontSize: '20px', fontWeight: '800', color: '#00BFFF', margin: 0 },
   headerSubtitle: { fontSize: '10px', color: '#94a3b8' },
   btnAdmin: { background: '#1A237E', color: 'white', padding: '8px 12px', borderRadius: '10px', border: 'none', fontWeight: 'bold' },
-  btnOut: { background: 'white', color: '#1A237E', padding: '8px 12px', border: '1px solid #E2E8F0', borderRadius: '10px' },
+  btnOut: { background: 'white', color: '#1A237E', padding: '8px 12px', border: '1px solid #E2E8F0', borderRadius: '12px' },
   search: { width: '100%', padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', background: '#FFF', marginBottom: '20px', fontSize: '16px', boxSizing: 'border-box' },
-  grid: { display: 'grid', gap: '25px' }, // El gridTemplateColumns se maneja en el código
+  grid: { display: 'grid', gap: '25px' },
   card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', flexDirection: 'column' },
-  carouselWrapper: { height: '220px', overflow: 'hidden', position: 'relative' }, // Agregué position relative para el hint
+  carouselWrapper: { height: '220px', overflow: 'hidden', position: 'relative' },
   carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px' },
   carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%', scrollSnapType: 'x mandatory' },
   img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start' },
