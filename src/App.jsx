@@ -66,6 +66,15 @@ export default function App() {
     setUploading(false);
   };
 
+  const removeImage = (index, isTemp) => {
+    if (isTemp) {
+      setTempImages(tempImages.filter((_, i) => i !== index));
+    } else {
+      const updatedImages = editing.imagenes.filter((_, i) => i !== index);
+      setEditing({ ...editing, imagenes: updatedImages });
+    }
+  };
+
   const saveHouse = async (e) => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
@@ -177,7 +186,6 @@ export default function App() {
             </div>
             <div style={s.divider}></div>
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción."}</p>
-            {/* NOMBRE CAMBIADO A AMENIDADES ABAJO */}
             <p><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             <div style={s.contactAlert}>
                 Para más información contacta con tu asesor o con DK: <br/>
@@ -194,10 +202,28 @@ export default function App() {
         <div style={s.overlay}>
           <form onSubmit={saveHouse} style={isMobile ? s.modalMobile : s.modalPC}>
             <h3 style={{marginBottom: '15px'}}>{editing ? "Editar" : "Nueva Propiedad"}</h3>
+            
+            {/* VISTA PREVIA DE IMÁGENES CON BOTÓN DE ELIMINAR */}
+            <div style={s.editImageGrid}>
+                {editing?.imagenes?.map((img, idx) => (
+                    <div key={idx} style={s.editImageItem}>
+                        <img src={img} style={s.editImgThumb} alt="" />
+                        <button type="button" onClick={() => removeImage(idx, false)} style={s.removeImgBtn}>×</button>
+                    </div>
+                ))}
+                {tempImages.map((img, idx) => (
+                    <div key={idx} style={s.editImageItem}>
+                        <img src={img} style={s.editImgThumb} alt="" />
+                        <button type="button" onClick={() => removeImage(idx, true)} style={s.removeImgBtn}>×</button>
+                    </div>
+                ))}
+            </div>
+
             <div style={s.uploadZone}>
                 <input type="file" accept="image/*" onChange={handleUpload} style={{width: '100%'}} />
-                <p style={{fontSize: '11px'}}>Fotos: {tempImages.length + (editing?.imagenes?.length || 0)}</p>
+                {uploading && <p style={{fontSize: '11px', color: '#00BFFF'}}>Subiendo...</p>}
             </div>
+
             <div style={s.formGrid}>
               <input name="modelo" placeholder="Modelo" defaultValue={editing?.modelo} required style={s.input} />
               <input name="ubicacion" placeholder="Ubicación" defaultValue={editing?.ubicacion} required style={s.input} />
@@ -211,7 +237,7 @@ export default function App() {
               <textarea name="amenidades" placeholder="Amenidades..." defaultValue={editing?.amenidades} style={{...s.input, gridColumn: 'span 2', height: '40px'}} />
               <textarea name="descripcion" placeholder="Descripción..." defaultValue={editing?.descripcion} style={{...s.input, gridColumn: 'span 2', height: '60px'}} />
             </div>
-            <button type="submit" style={s.btnPrimary}>Guardar</button>
+            <button type="submit" style={s.btnPrimary}>Guardar Cambios</button>
             <button type="button" onClick={() => {setShowModal(false); setTempImages([]); setEditing(null)}} style={s.btnCancel}>Cancelar</button>
           </form>
         </div>
@@ -253,6 +279,10 @@ const s = {
   overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
   modalMobile: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto' },
   modalPC: { background: 'white', padding: '25px', borderRadius: '25px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' },
+  editImageGrid: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '15px' },
+  editImageItem: { position: 'relative', height: '60px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' },
+  editImgThumb: { width: '100%', height: '100%', objectFit: 'cover' },
+  removeImgBtn: { position: 'absolute', top: '2px', right: '2px', background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' },
   detailModalMobile: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
   detailModalPC: { background: 'white', padding: '30px', borderRadius: '25px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
   closeBtn: { position: 'absolute', top: '10px', right: '10px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '25px', height: '25px', zIndex: 11 },
