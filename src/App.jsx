@@ -112,7 +112,7 @@ export default function App() {
             <p style={s.headerSubtitle}>{user ? `Hola, ${user.email}` : "Catálogo para Clientes"}</p>
         </div>
         <div style={{display: 'flex', gap: '8px'}}>
-          {user?.role === 'admin' && <button onClick={() => setShowModal(true)} style={s.btnAdmin}>+ Nueva Propiedad</button>}
+          {user?.role === 'admin' && <button onClick={() => setShowModal(true)} style={s.btnAdmin}>+</button>}
           {user ? <button onClick={() => signOut(auth).then(() => setView("welcome"))} style={s.btnOut}>Salir</button> : <button onClick={() => setView("welcome")} style={s.btnOut}>Menú</button>}
         </div>
       </header>
@@ -132,15 +132,14 @@ export default function App() {
               <p style={s.cardLoc}>📍 {h.ubicacion}</p>
               <div style={s.divider}></div>
               <div style={s.detailsRow}>
-                <div style={s.detCol}><strong>{h.recamaras}</strong><small>Hab.</small></div>
-                <div style={s.detCol}><strong>{h.banos}</strong><small>Baños</small></div>
-                <div style={s.detCol}><strong>{h.terreno}m2</strong><small>T. m²</small></div>
-                <div style={s.detCol}><strong>{h.construccion}m2</strong><small>C. m²</small></div>
+                <div style={s.detCol}><strong>{h.recamaras}</strong>Hab.</div>
+                <div style={s.detCol}><strong>{h.banos}</strong>Baños</div>
+                <div style={s.detCol}><strong>{h.terreno}m2</strong>T. m²</div>
               </div>
-              {h.promocion && <div style={s.promoBox}>🎁 Promoción: {h.promocion}</div>}
+              {h.promocion && <div style={s.promoBox}>🎁 {h.promocion}</div>}
               <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
                 <button onClick={(e) => { e.stopPropagation(); sendWhatsAppFicha(h); }} style={s.btnWa}>WhatsApp</button>
-                {user?.role === 'admin' && <button onClick={(e) => { e.stopPropagation(); setEditing(h); setShowModal(true); }} style={s.btnEd}>Editar Información</button>}
+                {user?.role === 'admin' && <button onClick={(e) => { e.stopPropagation(); setEditing(h); setShowModal(true); }} style={s.btnEd}>Editar</button>}
               </div>
             </div>
           </div>
@@ -161,23 +160,21 @@ export default function App() {
             <p style={s.cardLoc}>📍 {selectedHouse.ubicacion}</p>
             <div style={s.divider}></div>
             <div style={s.techGrid}>
-                <div style={s.techItem}><span>Pisos / Niveles:</span> <strong>{selectedHouse.niveles || "1"}</strong></div>
-                <div style={s.techItem}><span>Habitaciones:</span> <strong>{selectedHouse.recamaras || "0"}</strong></div>
+                <div style={s.techItem}><span>Niveles:</span> <strong>{selectedHouse.niveles || "1"}</strong></div>
+                <div style={s.techItem}><span>Hab:</span> <strong>{selectedHouse.recamaras || "0"}</strong></div>
                 <div style={s.techItem}><span>Baños:</span> <strong>{selectedHouse.banos || "0"}</strong></div>
-                <div style={s.techItem}><span>Terreno Total:</span> <strong>{selectedHouse.terreno || "0"} m²</strong></div>
-                <div style={s.techItem}><span>Construcción:</span> <strong>{selectedHouse.construccion || "0"} m²</strong></div>
+                <div style={s.techItem}><span>Terreno:</span> <strong>{selectedHouse.terreno}m²</strong></div>
+                <div style={s.techItem}><span>Const:</span> <strong>{selectedHouse.construccion}m²</strong></div>
             </div>
             <div style={s.divider}></div>
-            <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
-            <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
-            
+            <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción."}</p>
+            <p><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             <div style={s.contactAlert}>
                 Para más información contacta con tu asesor o con DK: <br/>
                 <span onClick={() => sendWhatsAppDirecto(selectedHouse)} style={{color: '#00BFFF', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold'}}>
-                   [Click aquí para preguntar por esta casa]
+                   [Click aquí para preguntar]
                 </span>
             </div>
-            
             <button onClick={() => sendWhatsAppFicha(selectedHouse)} style={{...s.btnWa, width: '100%'}}>WhatsApp</button>
           </div>
         </div>
@@ -186,9 +183,9 @@ export default function App() {
       {showModal && (
         <div style={s.overlay}>
           <form onSubmit={saveHouse} style={s.modal}>
-            <h3 style={{marginBottom: '15px'}}>{editing ? "Editar Propiedad" : "Nueva Propiedad"}</h3>
+            <h3 style={{marginBottom: '15px'}}>{editing ? "Editar" : "Nueva Propiedad"}</h3>
             <div style={s.uploadZone}>
-                <input type="file" accept="image/*" onChange={handleUpload} />
+                <input type="file" accept="image/*" onChange={handleUpload} style={{width: '100%'}} />
                 <p style={{fontSize: '11px'}}>Fotos: {tempImages.length + (editing?.imagenes?.length || 0)}</p>
             </div>
             <div style={s.formGrid}>
@@ -196,15 +193,15 @@ export default function App() {
               <input name="ubicacion" placeholder="Ubicación" defaultValue={editing?.ubicacion} required style={s.input} />
               <input name="precio" placeholder="Precio" defaultValue={editing?.precio} required style={s.input} />
               <input name="promocion" placeholder="Promoción" defaultValue={editing?.promocion} style={s.input} />
-              <input name="recamaras" placeholder="Habitaciones" defaultValue={editing?.recamaras} style={s.input} />
+              <input name="recamaras" placeholder="Hab" defaultValue={editing?.recamaras} style={s.input} />
               <input name="banos" placeholder="Baños" defaultValue={editing?.banos} style={s.input} />
-              <input name="niveles" placeholder="Pisos" defaultValue={editing?.niveles} style={s.input} />
-              <input name="terreno" placeholder="Terreno m2" defaultValue={editing?.terreno} style={s.input} />
-              <input name="construccion" placeholder="Construcción m2" defaultValue={editing?.construccion} style={s.input} />
+              <input name="niveles" placeholder="Niv" defaultValue={editing?.niveles} style={s.input} />
+              <input name="terreno" placeholder="T. m2" defaultValue={editing?.terreno} style={s.input} />
+              <input name="construccion" placeholder="C. m2" defaultValue={editing?.construccion} style={s.input} />
               <textarea name="amenidades" placeholder="Amenidades..." defaultValue={editing?.amenidades} style={{...s.input, gridColumn: 'span 2', height: '40px'}} />
               <textarea name="descripcion" placeholder="Descripción..." defaultValue={editing?.descripcion} style={{...s.input, gridColumn: 'span 2', height: '60px'}} />
             </div>
-            <button type="submit" style={s.btnPrimary}>Guardar Cambios</button>
+            <button type="submit" style={s.btnPrimary}>Guardar</button>
             <button type="button" onClick={() => {setShowModal(false); setTempImages([]); setEditing(null)}} style={s.btnCancel}>Cancelar</button>
           </form>
         </div>
@@ -214,43 +211,43 @@ export default function App() {
 }
 
 const s = {
-  container: { padding: '20px 15px', maxWidth: '1200px', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  headerTitle: { fontSize: '26px', fontWeight: '800', color: '#00BFFF', margin: 0, cursor: 'pointer' },
-  headerSubtitle: { fontSize: '12px', color: '#94a3b8' },
-  btnAdmin: { background: '#1A237E', color: 'white', padding: '10px 14px', borderRadius: '12px', border: 'none', fontWeight: 'bold' },
-  btnOut: { background: 'white', color: '#1A237E', padding: '10px 14px', border: '1px solid #E2E8F0', borderRadius: '12px' },
-  search: { width: '100%', padding: '18px', borderRadius: '20px', border: '1px solid #E2E8F0', background: '#FFF', marginBottom: '30px', boxSizing: 'border-box', fontSize: '16px' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '25px' },
-  card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', cursor: 'pointer' },
-  carouselWrapper: { height: '220px', overflow: 'hidden' },
-  carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '20px' },
+  container: { padding: '15px', maxWidth: '100vw', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh', overflowX: 'hidden' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' },
+  headerTitle: { fontSize: '22px', fontWeight: '800', color: '#00BFFF', margin: 0 },
+  headerSubtitle: { fontSize: '10px', color: '#94a3b8' },
+  btnAdmin: { background: '#1A237E', color: 'white', padding: '8px 12px', borderRadius: '10px', border: 'none', fontWeight: 'bold' },
+  btnOut: { background: 'white', color: '#1A237E', padding: '8px 12px', border: '1px solid #E2E8F0', borderRadius: '10px' },
+  search: { width: '100%', padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', background: '#FFF', marginBottom: '20px', fontSize: '16px', boxSizing: 'border-box' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100%, 1fr))', gap: '20px' },
+  card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' },
+  carouselWrapper: { height: '200px', overflow: 'hidden' },
+  carouselWrapperDetail: { height: '230px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px' },
   carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%', scrollSnapType: 'x mandatory' },
   img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start' },
-  cardBody: { padding: '18px' },
+  cardBody: { padding: '15px' },
   cardHeaderLine: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontSize: '20px', fontWeight: '800', margin: 0 },
-  cardPrice: { fontSize: '20px', fontWeight: '800', color: '#00BFFF' },
-  cardLoc: { color: '#64748b', fontSize: '13px', marginTop: '4px' },
-  divider: { height: '1px', backgroundColor: '#F1F5F9', margin: '15px 0' },
-  detailsRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '15px' },
-  detCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '14px' },
-  techGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
-  techItem: { fontSize: '14px', color: '#475569', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '5px' },
-  promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '10px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
-  contactAlert: { background: '#F1F5F9', color: '#475569', padding: '12px', borderRadius: '10px', textAlign: 'center', fontSize: '13px', fontWeight: '600', marginBottom: '15px', marginTop: '10px' },
+  cardTitle: { fontSize: '18px', fontWeight: '800', margin: 0 },
+  cardPrice: { fontSize: '18px', fontWeight: '800', color: '#00BFFF' },
+  cardLoc: { color: '#64748b', fontSize: '12px', marginTop: '4px' },
+  divider: { height: '1px', backgroundColor: '#F1F5F9', margin: '10px 0' },
+  detailsRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '10px' },
+  detCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '12px' },
+  techGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' },
+  techItem: { fontSize: '13px', color: '#475569', display: 'flex', justifyContent: 'space-between' },
+  promoBox: { background: '#E0F7FA', color: '#006064', padding: '8px', borderRadius: '10px', textAlign: 'center', fontWeight: '600', fontSize: '12px', marginBottom: '10px' },
+  contactAlert: { background: '#F1F5F9', color: '#475569', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '12px', marginBottom: '10px' },
   btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   btnEd: { flex: 1, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
-  overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' },
-  modal: { background: 'white', padding: '25px', borderRadius: '30px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' },
-  detailModal: { background: 'white', padding: '30px', borderRadius: '30px', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
-  closeBtn: { position: 'absolute', top: '15px', right: '15px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', zIndex: 11 },
-  uploadZone: { border: '2px dashed #00BFFF', borderRadius: '20px', padding: '15px', textAlign: 'center', marginBottom: '15px' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' },
-  input: { padding: '12px', borderRadius: '12px', border: '1px solid #E2E8F0', width: '100%', boxSizing: 'border-box' },
-  btnPrimary: { width: '100%', background: '#1A237E', color: 'white', padding: '16px', borderRadius: '15px', border: 'none', fontWeight: 'bold', fontSize: '16px' },
-  btnSecondary: { width: '100%', background: 'white', color: '#1A237E', padding: '16px', borderRadius: '15px', border: '2px solid #1A237E', fontWeight: 'bold', fontSize: '16px', marginTop: '10px' },
+  overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+  modal: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto' },
+  detailModal: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
+  closeBtn: { position: 'absolute', top: '10px', right: '10px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '25px', height: '25px', zIndex: 11 },
+  uploadZone: { border: '2px dashed #00BFFF', borderRadius: '15px', padding: '10px', textAlign: 'center', marginBottom: '10px' },
+  formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' },
+  input: { padding: '10px', borderRadius: '10px', border: '1px solid #E2E8F0', width: '100%', boxSizing: 'border-box' },
+  btnPrimary: { width: '100%', background: '#1A237E', color: 'white', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold', marginTop: '10px' },
+  btnSecondary: { width: '100%', background: 'white', color: '#1A237E', padding: '14px', borderRadius: '12px', border: '2px solid #1A237E', fontWeight: 'bold', marginTop: '10px' },
   btnCancel: { width: '100%', background: 'none', border: 'none', color: '#64748b', marginTop: '10px' },
   loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC' },
-  loginCard: { background: 'white', padding: '40px', borderRadius: '40px', textAlign: 'center', width: '380px' }
+  loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%' }
 };
