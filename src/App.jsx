@@ -73,17 +73,17 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
-  // FUNCIÓN DE WHATSAPP CON MENSAJE AUTOMÁTICO DETALLADO
-  const sendWhatsApp = (h) => {
+  // FUNCIÓN 1: MANDAR FICHA COMPLETA (BOTÓN VERDE)
+  const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
-    
-    // Este es el mensaje que el cliente enviará automáticamente
-    const intro = `Hola! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    
-    const msg = `${intro}%0A%0A*FICHA TÉCNICA - DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    
-    // REEMPLAZA LAS X POR TU NÚMERO (10 dígitos)
-    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank");
+    const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
+    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
+  };
+
+  // FUNCIÓN 2: MENSAJE CORTO DE INTERÉS (LINK EN TEXTO)
+  const sendWhatsAppInteres = (h) => {
+    const msg = `Hola! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
+    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
   };
 
   if (view === "welcome") return (
@@ -141,7 +141,7 @@ export default function App() {
               </div>
               {h.promocion && <div style={s.promoBox}>🎁 Promoción: {h.promocion}</div>}
               <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
-                <button onClick={(e) => { e.stopPropagation(); sendWhatsApp(h); }} style={s.btnWa}>WhatsApp</button>
+                <button onClick={(e) => { e.stopPropagation(); sendWhatsAppFicha(h); }} style={s.btnWa}>WhatsApp</button>
                 {user?.role === 'admin' && <button onClick={(e) => { e.stopPropagation(); setEditing(h); setShowModal(true); }} style={s.btnEd}>Editar Información</button>}
               </div>
             </div>
@@ -173,11 +173,15 @@ export default function App() {
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
             <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             
+            {/* AVISO CON LINK INTERACTIVO */}
             <div style={s.contactAlert}>
-                Para más información contacta con tu asesor o con DK:
+                Para más información contacta con tu asesor o con DK: <br/>
+                <span onClick={() => sendWhatsAppInteres(selectedHouse)} style={{color: '#00BFFF', cursor: 'pointer', textDecoration: 'underline'}}>
+                   [Click aquí para preguntar por esta casa]
+                </span>
             </div>
             
-            <button onClick={() => sendWhatsApp(selectedHouse)} style={{...s.btnWa, width: '100%'}}>WhatsApp</button>
+            <button onClick={() => sendWhatsAppFicha(selectedHouse)} style={{...s.btnWa, width: '100%'}}>WhatsApp</button>
           </div>
         </div>
       )}
