@@ -77,17 +77,15 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
-  // FUNCIÓN 1: BOTÓN VERDE (PARA ENVIAR A CUALQUIERA - SIN NÚMERO FIJO)
   const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
     const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
 
-  // FUNCIÓN 2: CONTACTO A DK (LINK AZUL - CON TU NÚMERO)
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank"); // <-- AQUÍ VA TU NÚMERO
+    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
   };
 
   if (view === "welcome") return (
@@ -179,6 +177,7 @@ export default function App() {
             </div>
             <div style={s.divider}></div>
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción."}</p>
+            {/* NOMBRE CAMBIADO A AMENIDADES ABAJO */}
             <p><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             <div style={s.contactAlert}>
                 Para más información contacta con tu asesor o con DK: <br/>
