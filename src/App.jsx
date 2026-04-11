@@ -73,17 +73,17 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
-  // FUNCIÓN 1: MANDAR FICHA COMPLETA (BOTÓN VERDE)
+  // FUNCIÓN 1: FICHA TÉCNICA (BOTÓN VERDE)
   const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
     const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
+    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank");
   };
 
-  // FUNCIÓN 2: MENSAJE CORTO DE INTERÉS (LINK EN TEXTO)
-  const sendWhatsAppInteres = (h) => {
-    const msg = `Hola! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
+  // FUNCIÓN 2: MENSAJE CORTO DIRECTO A LA EMPRESA (LINK AZUL)
+  const sendWhatsAppDirecto = (h) => {
+    const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
+    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank");
   };
 
   if (view === "welcome") return (
@@ -173,10 +173,9 @@ export default function App() {
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
             <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             
-            {/* AVISO CON LINK INTERACTIVO */}
             <div style={s.contactAlert}>
                 Para más información contacta con tu asesor o con DK: <br/>
-                <span onClick={() => sendWhatsAppInteres(selectedHouse)} style={{color: '#00BFFF', cursor: 'pointer', textDecoration: 'underline'}}>
+                <span onClick={() => sendWhatsAppDirecto(selectedHouse)} style={{color: '#00BFFF', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold'}}>
                    [Click aquí para preguntar por esta casa]
                 </span>
             </div>
