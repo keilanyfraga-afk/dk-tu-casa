@@ -8,7 +8,7 @@ const CLOUD_NAME = "dp4m3p0do";
 const UPLOAD_PRESET = "unsigned_preset"; 
 
 export default function App() {
-  const [view, setView] = useState("welcome"); // welcome, app, login
+  const [view, setView] = useState("welcome");
   const [user, setUser] = useState(null);
   const [houses, setHouses] = useState([]);
   const [filteredHouses, setFilteredHouses] = useState([]);
@@ -72,7 +72,8 @@ export default function App() {
   };
 
   const sendWhatsApp = (h) => {
-    const msg = `*DK TU CASA*%0A📍 ${h.ubicacion}%0A🏠 Modelo: ${h.modelo}%0A💰 Precio: ${h.precio}%0A📸 Fotos: ${h.imagenes?.[0]}`;
+    const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
+    const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
     window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
   };
 
@@ -139,7 +140,6 @@ export default function App() {
         ))}
       </div>
 
-      {/* MODAL DE MÁS INFORMACIÓN (DETALLES AMPLIADOS) */}
       {selectedHouse && (
         <div style={s.overlay} onClick={() => setSelectedHouse(null)}>
           <div style={s.detailModal} onClick={e => e.stopPropagation()}>
@@ -150,11 +150,9 @@ export default function App() {
                 </div>
             </div>
             <h2 style={s.cardTitle}>{selectedHouse.modelo}</h2>
-            <h3 style={s.cardPrice}>{selectedHouse.precio}</h3>
+            <h3 style={s.cardPrice}>${selectedHouse.precio}</h3>
             <p style={s.cardLoc}>📍 {selectedHouse.ubicacion}</p>
-            
             <div style={s.divider}></div>
-            
             <div style={s.techGrid}>
                 <div style={s.techItem}><span>Pisos / Niveles:</span> <strong>{selectedHouse.niveles || "1"}</strong></div>
                 <div style={s.techItem}><span>Habitaciones:</span> <strong>{selectedHouse.recamaras || "0"}</strong></div>
@@ -162,21 +160,16 @@ export default function App() {
                 <div style={s.techItem}><span>Terreno Total:</span> <strong>{selectedHouse.terreno || "0"} m²</strong></div>
                 <div style={s.techItem}><span>Construcción:</span> <strong>{selectedHouse.construccion || "0"} m²</strong></div>
             </div>
-
             <div style={s.divider}></div>
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
+            <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             
-            {/* NUEVO CAMPO DE AMENIDADES AGREGADO AQUÍ */}
-            <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "No se especificaron amenidades."}</p>
-            
-            {selectedHouse.promocion && <div style={s.promoBox}>🎁 {selectedHouse.promocion}</div>}
-            
-            <button onClick={() => sendWhatsApp(selectedHouse)} style={s.btnPrimary}>Solicitar Información por WhatsApp</button>
+            {/* BOTÓN DE WHATSAPP IGUAL AL DE LA TARJETA */}
+            <button onClick={() => sendWhatsApp(selectedHouse)} style={{...s.btnWa, width: '100%', marginTop: '20px'}}>WhatsApp</button>
           </div>
         </div>
       )}
 
-      {/* MODAL DE EDICIÓN */}
       {showModal && (
         <div style={s.overlay}>
           <form onSubmit={saveHouse} style={s.modal}>
@@ -195,8 +188,8 @@ export default function App() {
               <input name="niveles" placeholder="Pisos" defaultValue={editing?.niveles} style={s.input} />
               <input name="terreno" placeholder="Terreno m2" defaultValue={editing?.terreno} style={s.input} />
               <input name="construccion" placeholder="Construcción m2" defaultValue={editing?.construccion} style={s.input} />
-              <textarea name="amenidades" placeholder="Amenidades (Alberca, Cochera, etc.)" defaultValue={editing?.amenidades} style={{...s.input, gridColumn: 'span 2', height: '40px'}} />
-              <textarea name="descripcion" placeholder="Descripción detallada..." defaultValue={editing?.descripcion} style={{...s.input, gridColumn: 'span 2', height: '60px'}} />
+              <textarea name="amenidades" placeholder="Amenidades..." defaultValue={editing?.amenidades} style={{...s.input, gridColumn: 'span 2', height: '40px'}} />
+              <textarea name="descripcion" placeholder="Descripción..." defaultValue={editing?.descripcion} style={{...s.input, gridColumn: 'span 2', height: '60px'}} />
             </div>
             <button type="submit" style={s.btnPrimary}>Guardar Cambios</button>
             <button type="button" onClick={() => {setShowModal(false); setTempImages([]); setEditing(null)}} style={s.btnCancel}>Cancelar</button>
