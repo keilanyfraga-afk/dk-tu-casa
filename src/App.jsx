@@ -19,8 +19,13 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [uploading, setUploading] = useState(false);
   const [tempImages, setTempImages] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Detectar si es celular o PC
 
   useEffect(() => {
+    // Detectar cambios de tamaño de pantalla en tiempo real
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+
     const unsubAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         const userSnap = await getDoc(doc(db, "users", currentUser.email.toLowerCase().trim()));
@@ -33,7 +38,7 @@ export default function App() {
       setHouses(list);
       setFilteredHouses(list);
     });
-    return () => { unsubAuth(); unsubHouses(); };
+    return () => { unsubAuth(); unsubHouses(); window.removeEventListener("resize", handleResize); };
   }, []);
 
   useEffect(() => {
@@ -56,8 +61,8 @@ export default function App() {
     formData.append("upload_preset", UPLOAD_PRESET);
     try {
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
-      const data = await res.json();
-      setTempImages([...tempImages, data.secure_url]);
+      const data = res.json();
+      res.then(d => setTempImages([...tempImages, d.secure_url]));
     } catch (err) { alert("Error al subir foto"); }
     setUploading(false);
   };
@@ -108,7 +113,7 @@ export default function App() {
     <div style={s.container}>
       <header style={s.header}>
         <div style={{flex: 1}}>
-            <h1 style={s.headerTitle} onClick={() => setView("welcome")}>DK TU CASA</h1>
+            <h1 style={isMobile ? s.headerTitleMobile : s.headerTitlePC} onClick={() => setView("welcome")}>DK TU CASA</h1>
             <p style={s.headerSubtitle}>{user ? `Hola, ${user.email}` : "Catálogo para Clientes"}</p>
         </div>
         <div style={{display: 'flex', gap: '8px'}}>
@@ -119,13 +124,20 @@ export default function App() {
 
       <input placeholder="Buscar por modelo, zona, precio..." style={s.search} value={search} onChange={e => setSearch(e.target.value)} />
 
-      <div style={s.grid}>
+      {/* REGLA MÁGICA DE COLUMNAS PARA PC vs CELULAR */}
+      <div style={{...s.grid, gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(100%, 1fr))' : 'repeat(auto-fill, minmax(350px, 1fr))'}}>
         {filteredHouses.map(h => (
           <div key={h.id} style={s.card} onClick={() => setSelectedHouse(h)}>
             <div style={s.carouselWrapper}>
                 <div style={s.carouselContainer}>
                     {h.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} alt="" />)}
                 </div>
+                {/* INDICADOR DE MÁS FOTOS (🎁 Tu petición) */}
+                {h.imagenes?.length > 1 && (
+                    <div style={s.carouselHint}>
+                        Desliza ↔️ {h.imagenes.length} fotos más
+                    </div>
+                )}
             </div>
             <div style={s.cardBody}>
               <div style={s.cardHeaderLine}><h2 style={s.cardTitle}>{h.modelo}</h2><span style={s.cardPrice}>${h.precio}</span></div>
@@ -148,7 +160,7 @@ export default function App() {
 
       {selectedHouse && (
         <div style={s.overlay} onClick={() => setSelectedHouse(null)}>
-          <div style={s.detailModal} onClick={e => e.stopPropagation()}>
+          <div style={isMobile ? s.detailModalMobile : s.detailModalPC} onClick={e => e.stopPropagation()}>
             <button style={s.closeBtn} onClick={() => setSelectedHouse(null)}>✕</button>
             <div style={s.carouselWrapperDetail}>
                 <div style={s.carouselContainer}>
@@ -182,7 +194,7 @@ export default function App() {
 
       {showModal && (
         <div style={s.overlay}>
-          <form onSubmit={saveHouse} style={s.modal}>
+          <form onSubmit={saveHouse} style={isMobile ? s.modalMobile : s.modalPC}>
             <h3 style={{marginBottom: '15px'}}>{editing ? "Editar" : "Nueva Propiedad"}</h3>
             <div style={s.uploadZone}>
                 <input type="file" accept="image/*" onChange={handleUpload} style={{width: '100%'}} />
@@ -210,21 +222,24 @@ export default function App() {
   );
 }
 
+// ESTILOS AJUSTADOS PARA AMBAS VISTAS
 const s = {
-  container: { padding: '15px', maxWidth: '100vw', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh', overflowX: 'hidden' },
+  container: { padding: '15px', maxWidth: '1200px', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh', overflowX: 'hidden' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' },
-  headerTitle: { fontSize: '22px', fontWeight: '800', color: '#00BFFF', margin: 0 },
+  headerTitlePC: { fontSize: '28px', fontWeight: '800', color: '#00BFFF', margin: 0 },
+  headerTitleMobile: { fontSize: '20px', fontWeight: '800', color: '#00BFFF', margin: 0 },
   headerSubtitle: { fontSize: '10px', color: '#94a3b8' },
   btnAdmin: { background: '#1A237E', color: 'white', padding: '8px 12px', borderRadius: '10px', border: 'none', fontWeight: 'bold' },
   btnOut: { background: 'white', color: '#1A237E', padding: '8px 12px', border: '1px solid #E2E8F0', borderRadius: '10px' },
   search: { width: '100%', padding: '15px', borderRadius: '15px', border: '1px solid #E2E8F0', background: '#FFF', marginBottom: '20px', fontSize: '16px', boxSizing: 'border-box' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100%, 1fr))', gap: '20px' },
-  card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)' },
-  carouselWrapper: { height: '200px', overflow: 'hidden' },
-  carouselWrapperDetail: { height: '230px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px' },
+  grid: { display: 'grid', gap: '25px' }, // El gridTemplateColumns se maneja en el código
+  card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', flexDirection: 'column' },
+  carouselWrapper: { height: '220px', overflow: 'hidden', position: 'relative' }, // Agregué position relative para el hint
+  carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px' },
   carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%', scrollSnapType: 'x mandatory' },
   img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start' },
-  cardBody: { padding: '15px' },
+  carouselHint: { position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 10px', borderRadius: '15px', fontSize: '10px' },
+  cardBody: { padding: '18px', flex: 1, display: 'flex', flexDirection: 'column' },
   cardHeaderLine: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: '18px', fontWeight: '800', margin: 0 },
   cardPrice: { fontSize: '18px', fontWeight: '800', color: '#00BFFF' },
@@ -236,11 +251,13 @@ const s = {
   techItem: { fontSize: '13px', color: '#475569', display: 'flex', justifyContent: 'space-between' },
   promoBox: { background: '#E0F7FA', color: '#006064', padding: '8px', borderRadius: '10px', textAlign: 'center', fontWeight: '600', fontSize: '12px', marginBottom: '10px' },
   contactAlert: { background: '#F1F5F9', color: '#475569', padding: '10px', borderRadius: '10px', textAlign: 'center', fontSize: '12px', marginBottom: '10px' },
-  btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
+  btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold', fontSize: '13px' },
   btnEd: { flex: 1, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-  modal: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto' },
-  detailModal: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
+  modalMobile: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto' },
+  modalPC: { background: 'white', padding: '25px', borderRadius: '25px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' },
+  detailModalMobile: { background: 'white', padding: '20px', borderRadius: '25px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
+  detailModalPC: { background: 'white', padding: '30px', borderRadius: '25px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' },
   closeBtn: { position: 'absolute', top: '10px', right: '10px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '25px', height: '25px', zIndex: 11 },
   uploadZone: { border: '2px dashed #00BFFF', borderRadius: '15px', padding: '10px', textAlign: 'center', marginBottom: '10px' },
   formGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' },
@@ -249,5 +266,5 @@ const s = {
   btnSecondary: { width: '100%', background: 'white', color: '#1A237E', padding: '14px', borderRadius: '12px', border: '2px solid #1A237E', fontWeight: 'bold', marginTop: '10px' },
   btnCancel: { width: '100%', background: 'none', border: 'none', color: '#64748b', marginTop: '10px' },
   loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC' },
-  loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%' }
+  loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' }
 };
