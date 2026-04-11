@@ -3,7 +3,6 @@ import { db, auth } from "./firebase";
 import { collection, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 
-// CONFIGURACIÓN DE CLOUDINARY
 const CLOUD_NAME = "dp4m3p0do"; 
 const UPLOAD_PRESET = "unsigned_preset"; 
 
@@ -37,14 +36,12 @@ export default function App() {
     return () => { unsubAuth(); unsubHouses(); };
   }, []);
 
-  // LÓGICA DE BÚSQUEDA CORREGIDA (AHORA BUSCA PRECIOS TAMBIÉN)
   useEffect(() => {
     const term = search.toLowerCase();
     const results = houses.filter(h => {
       const modelo = h.modelo?.toLowerCase() || "";
       const ubicacion = h.ubicacion?.toLowerCase() || "";
-      const precio = h.precio?.toString().toLowerCase() || ""; // Convertimos precio a texto para buscar
-      
+      const precio = h.precio?.toString().toLowerCase() || "";
       return modelo.includes(term) || ubicacion.includes(term) || precio.includes(term);
     });
     setFilteredHouses(results);
@@ -76,10 +73,17 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
+  // FUNCIÓN DE WHATSAPP CON MENSAJE AUTOMÁTICO DETALLADO
   const sendWhatsApp = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
-    const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
+    
+    // Este es el mensaje que el cliente enviará automáticamente
+    const intro = `Hola! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
+    
+    const msg = `${intro}%0A%0A*FICHA TÉCNICA - DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
+    
+    // REEMPLAZA LAS X POR TU NÚMERO (10 dígitos)
+    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank");
   };
 
   if (view === "welcome") return (
@@ -169,7 +173,11 @@ export default function App() {
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
             <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             
-            <button onClick={() => sendWhatsApp(selectedHouse)} style={{...s.btnWa, width: '100%', marginTop: '20px'}}>WhatsApp</button>
+            <div style={s.contactAlert}>
+                Para más información contacta con tu asesor o con DK:
+            </div>
+            
+            <button onClick={() => sendWhatsApp(selectedHouse)} style={{...s.btnWa, width: '100%'}}>WhatsApp</button>
           </div>
         </div>
       )}
@@ -229,6 +237,7 @@ const s = {
   techGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
   techItem: { fontSize: '14px', color: '#475569', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '5px' },
   promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '12px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
+  contactAlert: { background: '#F1F5F9', color: '#475569', padding: '12px', borderRadius: '10px', textAlign: 'center', fontSize: '13px', fontWeight: '600', marginBottom: '15px', marginTop: '10px' },
   btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   btnEd: { flex: 1, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' },
