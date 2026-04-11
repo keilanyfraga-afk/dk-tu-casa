@@ -73,17 +73,16 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
-  // FUNCIÓN 1: FICHA TÉCNICA (BOTÓN VERDE)
+  // !!! REEMPLAZA LOS NÚMEROS ABAJO POR TU NÚMERO REAL !!!
   const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
     const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank");
+    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
   };
 
-  // FUNCIÓN 2: MENSAJE CORTO DIRECTO A LA EMPRESA (LINK AZUL)
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank");
+    window.open(`https://wa.me/528134484892?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
   };
 
   if (view === "welcome") return (
@@ -185,6 +184,7 @@ export default function App() {
         </div>
       )}
 
+      {/* MODAL DE EDICIÓN / NUEVA CASA SE QUEDA IGUAL */}
       {showModal && (
         <div style={s.overlay}>
           <form onSubmit={saveHouse} style={s.modal}>
@@ -215,6 +215,7 @@ export default function App() {
   );
 }
 
+// ESTILOS IGUALES
 const s = {
   container: { padding: '20px 15px', maxWidth: '1200px', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
