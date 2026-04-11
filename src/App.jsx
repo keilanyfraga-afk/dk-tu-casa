@@ -73,16 +73,15 @@ export default function App() {
     } catch (err) { alert("Error al guardar"); }
   };
 
-  // !!! REEMPLAZA LOS NÚMEROS ABAJO POR TU NÚMERO REAL !!!
   const sendWhatsAppFicha = (h) => {
     const fotosLink = h.imagenes?.map((img, i) => `%0A📸 Foto ${i+1}: ${img}`).join('') || '';
     const msg = `*DK TU CASA INMOBILIARIA*%0A📍 ${h.ubicacion.toUpperCase()}%0A🏠 *Modelo:* ${h.modelo.toUpperCase()}%0A💰 *Precio:* ${h.precio}%0A🏢 *Niveles:* ${h.niveles || '1'}%0A🛌 *Hab:* ${h.recamaras} | 🚿 *Baños:* ${h.banos}%0A📐 *T:* ${h.terreno} m2 | 🏠 *C:* ${h.construccion} m2${fotosLink}`;
-    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
+    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
   };
 
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
+    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
   };
 
   if (view === "welcome") return (
@@ -125,7 +124,7 @@ export default function App() {
           <div key={h.id} style={s.card} onClick={() => setSelectedHouse(h)}>
             <div style={s.carouselWrapper}>
                 <div style={s.carouselContainer}>
-                    {h.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} />)}
+                    {h.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} alt="" />)}
                 </div>
             </div>
             <div style={s.cardBody}>
@@ -154,7 +153,7 @@ export default function App() {
             <button style={s.closeBtn} onClick={() => setSelectedHouse(null)}>✕</button>
             <div style={s.carouselWrapperDetail}>
                 <div style={s.carouselContainer}>
-                    {selectedHouse.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} />)}
+                    {selectedHouse.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} alt="" />)}
                 </div>
             </div>
             <h2 style={s.cardTitle}>{selectedHouse.modelo}</h2>
@@ -184,7 +183,6 @@ export default function App() {
         </div>
       )}
 
-      {/* MODAL DE EDICIÓN / NUEVA CASA SE QUEDA IGUAL */}
       {showModal && (
         <div style={s.overlay}>
           <form onSubmit={saveHouse} style={s.modal}>
@@ -215,7 +213,6 @@ export default function App() {
   );
 }
 
-// ESTILOS IGUALES
 const s = {
   container: { padding: '20px 15px', maxWidth: '1200px', margin: '0 auto', fontFamily: '-apple-system, sans-serif', backgroundColor: '#F8FAFC', minHeight: '100vh' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
@@ -240,7 +237,7 @@ const s = {
   detCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '14px' },
   techGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
   techItem: { fontSize: '14px', color: '#475569', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '5px' },
-  promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '12px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
+  promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '10px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
   contactAlert: { background: '#F1F5F9', color: '#475569', padding: '12px', borderRadius: '10px', textAlign: 'center', fontSize: '13px', fontWeight: '600', marginBottom: '15px', marginTop: '10px' },
   btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   btnEd: { flex: 1, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
