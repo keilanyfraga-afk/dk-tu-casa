@@ -37,11 +37,16 @@ export default function App() {
     return () => { unsubAuth(); unsubHouses(); };
   }, []);
 
+  // LÓGICA DE BÚSQUEDA CORREGIDA (AHORA BUSCA PRECIOS TAMBIÉN)
   useEffect(() => {
-    const results = houses.filter(h => 
-      h.modelo?.toLowerCase().includes(search.toLowerCase()) ||
-      h.ubicacion?.toLowerCase().includes(search.toLowerCase())
-    );
+    const term = search.toLowerCase();
+    const results = houses.filter(h => {
+      const modelo = h.modelo?.toLowerCase() || "";
+      const ubicacion = h.ubicacion?.toLowerCase() || "";
+      const precio = h.precio?.toString().toLowerCase() || ""; // Convertimos precio a texto para buscar
+      
+      return modelo.includes(term) || ubicacion.includes(term) || precio.includes(term);
+    });
     setFilteredHouses(results);
   }, [search, houses]);
 
@@ -164,7 +169,6 @@ export default function App() {
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
             <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "N/A"}</p>
             
-            {/* BOTÓN DE WHATSAPP IGUAL AL DE LA TARJETA */}
             <button onClick={() => sendWhatsApp(selectedHouse)} style={{...s.btnWa, width: '100%', marginTop: '20px'}}>WhatsApp</button>
           </div>
         </div>
@@ -224,7 +228,7 @@ const s = {
   detCol: { display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '14px' },
   techGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' },
   techItem: { fontSize: '14px', color: '#475569', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '5px' },
-  promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '10px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
+  promoBox: { background: '#E0F7FA', color: '#006064', padding: '10px', borderRadius: '12px', textAlign: 'center', fontWeight: '600', fontSize: '13px', marginBottom: '10px' },
   btnWa: { flex: 1, background: '#25D366', color: 'white', border: 'none', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   btnEd: { flex: 1, background: 'white', color: '#00BFFF', border: '1px solid #00BFFF', padding: '12px', borderRadius: '15px', fontWeight: 'bold' },
   overlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' },
