@@ -155,7 +155,6 @@ export default function App() {
             
             <div style={s.divider}></div>
             
-            {/* AQUÍ SE MUESTRAN LOS CAMPOS QUE FALTABAN */}
             <div style={s.techGrid}>
                 <div style={s.techItem}><span>Pisos / Niveles:</span> <strong>{selectedHouse.niveles || "1"}</strong></div>
                 <div style={s.techItem}><span>Habitaciones:</span> <strong>{selectedHouse.recamaras || "0"}</strong></div>
@@ -166,6 +165,9 @@ export default function App() {
 
             <div style={s.divider}></div>
             <p><strong>Descripción:</strong><br/>{selectedHouse.descripcion || "Sin descripción adicional."}</p>
+            
+            {/* NUEVO CAMPO DE AMENIDADES AGREGADO AQUÍ */}
+            <p style={{marginTop: '10px'}}><strong>Amenidades:</strong><br/>{selectedHouse.amenidades || "No se especificaron amenidades."}</p>
             
             {selectedHouse.promocion && <div style={s.promoBox}>🎁 {selectedHouse.promocion}</div>}
             
@@ -193,6 +195,7 @@ export default function App() {
               <input name="niveles" placeholder="Pisos" defaultValue={editing?.niveles} style={s.input} />
               <input name="terreno" placeholder="Terreno m2" defaultValue={editing?.terreno} style={s.input} />
               <input name="construccion" placeholder="Construcción m2" defaultValue={editing?.construccion} style={s.input} />
+              <textarea name="amenidades" placeholder="Amenidades (Alberca, Cochera, etc.)" defaultValue={editing?.amenidades} style={{...s.input, gridColumn: 'span 2', height: '40px'}} />
               <textarea name="descripcion" placeholder="Descripción detallada..." defaultValue={editing?.descripcion} style={{...s.input, gridColumn: 'span 2', height: '60px'}} />
             </div>
             <button type="submit" style={s.btnPrimary}>Guardar Cambios</button>
