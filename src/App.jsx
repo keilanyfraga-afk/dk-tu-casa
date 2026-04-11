@@ -85,7 +85,7 @@ export default function App() {
     window.open(`https://wa.me/528140099029?text=${msg}`, "_blank"); // <-- CAMBIA ESTE NÚMERO
   };
 
-  if (view === "welcome") return (****
+  if (view === "welcome") return (
     <div style={s.loginContainer}><div style={s.loginCard}>
         <h1 style={{color: '#00BFFF', fontWeight: '800', fontSize: '32px'}}>DK TU CASA</h1>
         <button onClick={() => setView("app")} style={s.btnPrimary}>Ver Catálogo (Cliente)</button>
