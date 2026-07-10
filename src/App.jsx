@@ -20,8 +20,6 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [tempImages, setTempImages] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
-  // NUEVO ESTADO: Para controlar la foto en pantalla completa
   const [fullscreenImage, setFullscreenImage] = useState(null);
 
   useEffect(() => {
@@ -180,8 +178,8 @@ export default function App() {
           <div style={isMobile ? s.detailModalMobile : s.detailModalPC} onClick={e => e.stopPropagation()}>
             <button style={s.closeBtn} onClick={() => setSelectedHouse(null)}>✕</button>
             
-            {/* CAROUSEL DEL MODAL: Al hacer clic en una foto se abre a pantalla completa */}
-            <div style={s.carouselWrapperDetail}>
+            {/* CAROUSEL CORREGIDO CON STOPPROPAGATION */}
+            <div style={s.carouselWrapperDetail} onClick={(e) => e.stopPropagation()}>
                 <div style={s.carouselContainer}>
                     {selectedHouse.imagenes?.map((img, idx) => (
                       <img 
@@ -189,12 +187,15 @@ export default function App() {
                         src={img} 
                         style={{...s.img, cursor: 'zoom-in'}} 
                         alt="" 
-                        onClick={() => setFullscreenImage(img)} 
+                        onClick={(e) => {
+                          e.stopPropagation(); // Evita que se cierre el modal grande
+                          setFullscreenImage(img);
+                        }} 
                       />
                     ))}
                 </div>
                 {selectedHouse.imagenes?.length > 1 && (
-                    <div style={s.carouselHintModal}>Desliza ↔️ o toca para ampliar</div>
+                    <div style={s.carouselHintModal}>Desliza ↔️ o toca la foto para ampliar</div>
                 )}
             </div>
 
@@ -223,11 +224,11 @@ export default function App() {
         </div>
       )}
 
-      {/* NUEVO PANTALLA COMPLETA (LIGHTBOX) */}
+      {/* PANTALLA COMPLETA TOTALMENTE INDEPENDIENTE */}
       {fullscreenImage && (
-        <div style={s.fullscreenOverlay} onClick={() => setFullscreenImage(null)}>
-          <button style={s.fullscreenCloseBtn} onClick={() => setFullscreenImage(null)}>✕</button>
-          <img src={fullscreenImage} style={s.fullscreenImg} alt="" />
+        <div style={s.fullscreenOverlay} onClick={(e) => { e.stopPropagation(); setFullscreenImage(null); }}>
+          <button style={s.fullscreenCloseBtn} onClick={(e) => { e.stopPropagation(); setFullscreenImage(null); }}>✕</button>
+          <img src={fullscreenImage} style={s.fullscreenImg} alt="" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
 
@@ -290,7 +291,7 @@ const s = {
   grid: { display: 'grid', gap: '25px' },
   card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', flexDirection: 'column' },
   carouselWrapper: { height: '220px', overflow: 'hidden', position: 'relative' },
-  carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px', position: 'relative' },
+  carouselWrapperDetail: { height: '320px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px', position: 'relative', backgroundColor: '#ebebeb' },
   carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%', scrollSnapType: 'x mandatory' },
   img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start' },
   carouselHint: { position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 10px', borderRadius: '15px', fontSize: '10px' },
@@ -329,8 +330,8 @@ const s = {
   loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' },
   btnGoogle: { width: '100%', background: '#fff', color: '#444', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' },
   
-  // ESTILOS DE PANTALLA COMPLETA
-  fullscreenOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, cursor: 'zoom-out' },
-  fullscreenImg: { maxWidth: '95%', maxHeight: '90vh', objectFit: 'contain', borderRadius: '8px' },
-  fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }
+  // NATIVOS EN PANTALLA COMPLETA
+  fullscreenOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 },
+  fullscreenImg: { maxWidth: '100%', maxHeight: '100vh', objectFit: 'contain' },
+  fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 }
 };
