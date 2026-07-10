@@ -20,7 +20,9 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [tempImages, setTempImages] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [fullscreenImage, setFullscreenImage] = useState(null);
+  
+  // NUEVO: Controlar el índice de la foto en pantalla completa
+  const [fullscreenIndex, setFullscreenIndex] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -107,6 +109,21 @@ export default function App() {
     }
   };
 
+  // FUNCIONES PARA NAVEGAR EN LA FOTO COMPLETA
+  const nextImage = (e) => {
+    e.stopPropagation();
+    if (selectedHouse?.imagenes && fullscreenIndex < selectedHouse.imagenes.length - 1) {
+      setFullscreenIndex(fullscreenIndex + 1);
+    }
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    if (fullscreenIndex > 0) {
+      setFullscreenIndex(fullscreenIndex - 1);
+    }
+  };
+
   if (view === "welcome") return (
     <div style={s.loginContainer}><div style={s.loginCard}>
         <h1 style={{color: '#00BFFF', fontWeight: '800', fontSize: '32px'}}>DK TU CASA</h1>
@@ -178,7 +195,6 @@ export default function App() {
           <div style={isMobile ? s.detailModalMobile : s.detailModalPC} onClick={e => e.stopPropagation()}>
             <button style={s.closeBtn} onClick={() => setSelectedHouse(null)}>✕</button>
             
-            {/* CAROUSEL CORREGIDO CON STOPPROPAGATION */}
             <div style={s.carouselWrapperDetail} onClick={(e) => e.stopPropagation()}>
                 <div style={s.carouselContainer}>
                     {selectedHouse.imagenes?.map((img, idx) => (
@@ -188,14 +204,14 @@ export default function App() {
                         style={{...s.img, cursor: 'zoom-in'}} 
                         alt="" 
                         onClick={(e) => {
-                          e.stopPropagation(); // Evita que se cierre el modal grande
-                          setFullscreenImage(img);
+                          e.stopPropagation();
+                          setFullscreenIndex(idx); // Guarda la posición inicial
                         }} 
                       />
                     ))}
                 </div>
                 {selectedHouse.imagenes?.length > 1 && (
-                    <div style={s.carouselHintModal}>Desliza ↔️ o toca la foto para ampliar</div>
+                    <div style={s.carouselHintModal}>Desliza ↔️ o toca para ampliar</div>
                 )}
             </div>
 
@@ -224,11 +240,32 @@ export default function App() {
         </div>
       )}
 
-      {/* PANTALLA COMPLETA TOTALMENTE INDEPENDIENTE */}
-      {fullscreenImage && (
-        <div style={s.fullscreenOverlay} onClick={(e) => { e.stopPropagation(); setFullscreenImage(null); }}>
-          <button style={s.fullscreenCloseBtn} onClick={(e) => { e.stopPropagation(); setFullscreenImage(null); }}>✕</button>
-          <img src={fullscreenImage} style={s.fullscreenImg} alt="" onClick={(e) => e.stopPropagation()} />
+      {/* PANTALLA COMPLETA MEJORADA CON NAVEGACIÓN ENTRE FOTOS */}
+      {fullscreenIndex !== null && selectedHouse?.imagenes && (
+        <div style={s.fullscreenOverlay} onClick={() => setFullscreenIndex(null)}>
+          <button style={s.fullscreenCloseBtn} onClick={() => setFullscreenIndex(null)}>✕</button>
+          
+          {/* Flecha Izquierda (Solo sale si no es la primera foto) */}
+          {fullscreenIndex > 0 && (
+            <button style={{...s.navBtn, left: '20px'}} onClick={prevImage}>◀</button>
+          )}
+
+          <img 
+            src={selectedHouse.imagenes[fullscreenIndex]} 
+            style={s.fullscreenImg} 
+            alt="" 
+            onClick={(e) => e.stopPropagation()} 
+          />
+
+          {/* Flecha Derecha (Solo sale si faltan fotos por ver) */}
+          {fullscreenIndex < selectedHouse.imagenes.length - 1 && (
+            <button style={{...s.navBtn, right: '20px'}} onClick={nextImage}>▶</button>
+          )}
+
+          {/* Contador de fotos arriba (ej: 2 / 5) */}
+          <div style={s.photoCounter}>
+            {fullscreenIndex + 1} / {selectedHouse.imagenes.length}
+          </div>
         </div>
       )}
 
@@ -330,8 +367,10 @@ const s = {
   loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' },
   btnGoogle: { width: '100%', background: '#fff', color: '#444', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' },
   
-  // NATIVOS EN PANTALLA COMPLETA
+  // LIGHTBOX NATIVO E INTERACTIVO
   fullscreenOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 },
-  fullscreenImg: { maxWidth: '100%', maxHeight: '100vh', objectFit: 'contain' },
-  fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 }
+  fullscreenImg: { maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '4px' },
+  fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 },
+  navBtn: { position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: '50%', width: '50px', height: '50px', fontSize: '24px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100, userSelect: 'none' },
+  photoCounter: { position: 'absolute', top: '25px', left: '50%', transform: 'translateX(-50%)', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '15px', fontSize: '14px', fontWeight: 'bold' }
 };
