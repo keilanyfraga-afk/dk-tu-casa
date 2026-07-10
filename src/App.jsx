@@ -20,9 +20,11 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [tempImages, setTempImages] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
-  // NUEVO: Controlar el índice de la foto en pantalla completa
   const [fullscreenIndex, setFullscreenIndex] = useState(null);
+
+  // NUEVOS ESTADOS: Para registrar dónde empieza y termina el toque en el celular
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -74,7 +76,7 @@ export default function App() {
       setTempImages(tempImages.filter((_, i) => i !== index));
     } else {
       const updatedImages = editing.imagenes.filter((_, i) => i !== index);
-      setEditing({ ...editing, imagenes: updatedImages });
+      setEditing({ ...editing, images: updatedImages });
     }
   };
 
@@ -109,19 +111,42 @@ export default function App() {
     }
   };
 
-  // FUNCIONES PARA NAVEGAR EN LA FOTO COMPLETA
+  // NAVEGACIÓN ENTRE FOTOS
   const nextImage = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (selectedHouse?.imagenes && fullscreenIndex < selectedHouse.imagenes.length - 1) {
       setFullscreenIndex(fullscreenIndex + 1);
     }
   };
 
   const prevImage = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (fullscreenIndex > 0) {
       setFullscreenIndex(fullscreenIndex - 1);
     }
+  };
+
+  // LOGICA PARA DETECTAR DESLIZAMIENTO CON EL DEDO (SWIPE)
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;  // Deslizar a la izquierda (Siguiente)
+    const isRightSwipe = distance < -50; // Deslizar a la derecha (Anterior)
+
+    if (isLeftSwipe) nextImage();
+    if (isRightSwipe) prevImage();
+
+    // Resetear valores para el siguiente deslizamiento
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   if (view === "welcome") return (
@@ -205,7 +230,7 @@ export default function App() {
                         alt="" 
                         onClick={(e) => {
                           e.stopPropagation();
-                          setFullscreenIndex(idx); // Guarda la posición inicial
+                          setFullscreenIndex(idx);
                         }} 
                       />
                     ))}
@@ -240,13 +265,19 @@ export default function App() {
         </div>
       )}
 
-      {/* PANTALLA COMPLETA MEJORADA CON NAVEGACIÓN ENTRE FOTOS */}
+      {/* PANTALLA COMPLETA TOTALMENTE FLUIDA CON SOPORTE PARA DESLIZAR DEDO (TOUCH EVENTS) */}
       {fullscreenIndex !== null && selectedHouse?.imagenes && (
-        <div style={s.fullscreenOverlay} onClick={() => setFullscreenIndex(null)}>
+        <div 
+          style={s.fullscreenOverlay} 
+          onClick={() => setFullscreenIndex(null)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <button style={s.fullscreenCloseBtn} onClick={() => setFullscreenIndex(null)}>✕</button>
           
-          {/* Flecha Izquierda (Solo sale si no es la primera foto) */}
-          {fullscreenIndex > 0 && (
+          {/* Flechas visibles en PC, en celular se puede usar el dedo */}
+          {fullscreenIndex > 0 && !isMobile && (
             <button style={{...s.navBtn, left: '20px'}} onClick={prevImage}>◀</button>
           )}
 
@@ -257,14 +288,13 @@ export default function App() {
             onClick={(e) => e.stopPropagation()} 
           />
 
-          {/* Flecha Derecha (Solo sale si faltan fotos por ver) */}
-          {fullscreenIndex < selectedHouse.imagenes.length - 1 && (
+          {fullscreenIndex < selectedHouse.imagenes.length - 1 && !isMobile && (
             <button style={{...s.navBtn, right: '20px'}} onClick={nextImage}>▶</button>
           )}
 
-          {/* Contador de fotos arriba (ej: 2 / 5) */}
           <div style={s.photoCounter}>
             {fullscreenIndex + 1} / {selectedHouse.imagenes.length}
+            {isMobile && <span style={{fontSize: '10px', display: 'block', fontWeight: 'normal', marginTop: '2px'}}>↔️ Desliza para cambiar</span>}
           </div>
         </div>
       )}
@@ -367,10 +397,9 @@ const s = {
   loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' },
   btnGoogle: { width: '100%', background: '#fff', color: '#444', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' },
   
-  // LIGHTBOX NATIVO E INTERACTIVO
   fullscreenOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 },
-  fullscreenImg: { maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '4px' },
+  fullscreenImg: { maxWidth: '95%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '4px', userSelect: 'none', pointerEvents: 'none' },
   fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 },
   navBtn: { position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: '50%', width: '50px', height: '50px', fontSize: '24px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100, userSelect: 'none' },
-  photoCounter: { position: 'absolute', top: '25px', left: '50%', transform: 'translateX(-50%)', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '15px', fontSize: '14px', fontWeight: 'bold' }
+  photoCounter: { position: 'absolute', top: '25px', left: '50%', transform: 'translateX(-50%)', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '15px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }
 };
