@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db, auth } from "./firebase"; 
 import { collection, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
-// Se agregaron GoogleAuthProvider y signInWithPopup para el inicio con Google
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const CLOUD_NAME = "dp4m3p0do"; 
@@ -21,6 +20,9 @@ export default function App() {
   const [uploading, setUploading] = useState(false);
   const [tempImages, setTempImages] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // NUEVO ESTADO: Para controlar la foto en pantalla completa
+  const [fullscreenImage, setFullscreenImage] = useState(null);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -95,10 +97,9 @@ export default function App() {
 
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
+    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
   };
 
-  // NUEVA FUNCIÓN EXTRA: ACCEDER CON GOOGLE
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
@@ -123,12 +124,7 @@ export default function App() {
           <input type="email" placeholder="Correo" style={s.input} onChange={e => setEmail(e.target.value)} />
           <input type="password" placeholder="Contraseña" style={s.input} onChange={e => setPassword(e.target.value)} />
           <button style={s.btnPrimary}>Entrar</button>
-          
-          {/* NUEVO BOTÓN DE GOOGLE AGREGADO AQUÍ ABAJO */}
-          <button type="button" onClick={handleGoogleLogin} style={s.btnGoogle}>
-             G_ Iniciar con Google
-          </button>
-          
+          <button type="button" onClick={handleGoogleLogin} style={s.btnGoogle}>G_ Iniciar con Google</button>
           <button type="button" onClick={() => setView("welcome")} style={{background: 'none', border: 'none', marginTop: '15px'}}>Volver</button>
         </form>
     </div></div>
@@ -157,9 +153,7 @@ export default function App() {
                     {h.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} alt="" />)}
                 </div>
                 {h.imagenes?.length > 1 && (
-                    <div style={s.carouselHint}>
-                        Desliza ↔️ {h.imagenes.length} fotos más
-                    </div>
+                    <div style={s.carouselHint}>Desliza ↔️ {h.imagenes.length} fotos más</div>
                 )}
             </div>
             <div style={s.cardBody}>
@@ -185,11 +179,25 @@ export default function App() {
         <div style={s.overlay} onClick={() => setSelectedHouse(null)}>
           <div style={isMobile ? s.detailModalMobile : s.detailModalPC} onClick={e => e.stopPropagation()}>
             <button style={s.closeBtn} onClick={() => setSelectedHouse(null)}>✕</button>
+            
+            {/* CAROUSEL DEL MODAL: Al hacer clic en una foto se abre a pantalla completa */}
             <div style={s.carouselWrapperDetail}>
                 <div style={s.carouselContainer}>
-                    {selectedHouse.imagenes?.map((img, idx) => <img key={idx} src={img} style={s.img} alt="" />)}
+                    {selectedHouse.imagenes?.map((img, idx) => (
+                      <img 
+                        key={idx} 
+                        src={img} 
+                        style={{...s.img, cursor: 'zoom-in'}} 
+                        alt="" 
+                        onClick={() => setFullscreenImage(img)} 
+                      />
+                    ))}
                 </div>
+                {selectedHouse.imagenes?.length > 1 && (
+                    <div style={s.carouselHintModal}>Desliza ↔️ o toca para ampliar</div>
+                )}
             </div>
+
             <h2 style={s.cardTitle}>{selectedHouse.modelo}</h2>
             <h3 style={s.cardPrice}>${selectedHouse.precio}</h3>
             <p style={s.cardLoc}>📍 {selectedHouse.ubicacion}</p>
@@ -212,6 +220,14 @@ export default function App() {
             </div>
             <button onClick={() => sendWhatsAppFicha(selectedHouse)} style={{...s.btnWa, width: '100%'}}>WhatsApp</button>
           </div>
+        </div>
+      )}
+
+      {/* NUEVO PANTALLA COMPLETA (LIGHTBOX) */}
+      {fullscreenImage && (
+        <div style={s.fullscreenOverlay} onClick={() => setFullscreenImage(null)}>
+          <button style={s.fullscreenCloseBtn} onClick={() => setFullscreenImage(null)}>✕</button>
+          <img src={fullscreenImage} style={s.fullscreenImg} alt="" />
         </div>
       )}
 
@@ -274,10 +290,11 @@ const s = {
   grid: { display: 'grid', gap: '25px' },
   card: { background: 'white', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 5px 15px rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', flexDirection: 'column' },
   carouselWrapper: { height: '220px', overflow: 'hidden', position: 'relative' },
-  carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px' },
+  carouselWrapperDetail: { height: '280px', overflow: 'hidden', borderRadius: '20px', marginBottom: '15px', position: 'relative' },
   carouselContainer: { display: 'flex', overflowX: 'auto', height: '100%', scrollSnapType: 'x mandatory' },
   img: { flex: '0 0 100%', width: '100%', height: '100%', objectFit: 'cover', scrollSnapAlign: 'start' },
   carouselHint: { position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 10px', borderRadius: '15px', fontSize: '10px' },
+  carouselHintModal: { position: 'absolute', bottom: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', color: 'white', padding: '4px 10px', borderRadius: '15px', fontSize: '10px', pointerEvents: 'none' },
   cardBody: { padding: '18px', flex: 1, display: 'flex', flexDirection: 'column' },
   cardHeaderLine: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: '18px', fontWeight: '800', margin: 0 },
@@ -310,6 +327,10 @@ const s = {
   btnCancel: { width: '100%', background: 'none', border: 'none', color: '#64748b', marginTop: '10px' },
   loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC' },
   loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' },
-  // Estilo simple para el nuevo botón de Google
-  btnGoogle: { width: '100%', background: '#fff', color: '#444', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' }
+  btnGoogle: { width: '100%', background: '#fff', color: '#444', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' },
+  
+  // ESTILOS DE PANTALLA COMPLETA
+  fullscreenOverlay: { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, cursor: 'zoom-out' },
+  fullscreenImg: { maxWidth: '95%', maxHeight: '90vh', objectFit: 'contain', borderRadius: '8px' },
+  fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }
 };
