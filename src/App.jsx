@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { db, auth } from "./firebase"; 
 import { collection, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+// Se agregaron GoogleAuthProvider y signInWithPopup para el inicio con Google
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const CLOUD_NAME = "dp4m3p0do"; 
 const UPLOAD_PRESET = "unsigned_preset"; 
@@ -94,7 +95,17 @@ export default function App() {
 
   const sendWhatsAppDirecto = (h) => {
     const msg = `Hola DK Inmobiliaria! Me interesa obtener información sobre la casa *Modelo ${h.modelo.toUpperCase()}* en *${h.ubicacion.toUpperCase()}*.`;
-    window.open(`https://wa.me/528140099029?text=${msg}`, "_blank");
+    window.open(`https://wa.me/5281XXXXXXXX?text=${msg}`, "_blank");
+  };
+
+  // NUEVA FUNCIÓN EXTRA: ACCEDER CON GOOGLE
+  const handleGoogleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      alert("Error al iniciar sesión con Google");
+    }
   };
 
   if (view === "welcome") return (
@@ -112,6 +123,12 @@ export default function App() {
           <input type="email" placeholder="Correo" style={s.input} onChange={e => setEmail(e.target.value)} />
           <input type="password" placeholder="Contraseña" style={s.input} onChange={e => setPassword(e.target.value)} />
           <button style={s.btnPrimary}>Entrar</button>
+          
+          {/* NUEVO BOTÓN DE GOOGLE AGREGADO AQUÍ ABAJO */}
+          <button type="button" onClick={handleGoogleLogin} style={s.btnGoogle}>
+             G_ Iniciar con Google
+          </button>
+          
           <button type="button" onClick={() => setView("welcome")} style={{background: 'none', border: 'none', marginTop: '15px'}}>Volver</button>
         </form>
     </div></div>
@@ -203,7 +220,6 @@ export default function App() {
           <form onSubmit={saveHouse} style={isMobile ? s.modalMobile : s.modalPC}>
             <h3 style={{marginBottom: '15px'}}>{editing ? "Editar" : "Nueva Propiedad"}</h3>
             
-            {/* VISTA PREVIA DE IMÁGENES CON BOTÓN DE ELIMINAR */}
             <div style={s.editImageGrid}>
                 {editing?.imagenes?.map((img, idx) => (
                     <div key={idx} style={s.editImageItem}>
@@ -293,5 +309,7 @@ const s = {
   btnSecondary: { width: '100%', background: 'white', color: '#1A237E', padding: '14px', borderRadius: '12px', border: '2px solid #1A237E', fontWeight: 'bold', marginTop: '10px' },
   btnCancel: { width: '100%', background: 'none', border: 'none', color: '#64748b', marginTop: '10px' },
   loginContainer: { height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F8FAFC' },
-  loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' }
+  loginCard: { background: 'white', padding: '30px', borderRadius: '30px', textAlign: 'center', width: '85%', maxWidth: '380px' },
+  // Estilo simple para el nuevo botón de Google
+  btnGoogle: { width: '100%', background: '#fff', color: '#444', padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' }
 };
