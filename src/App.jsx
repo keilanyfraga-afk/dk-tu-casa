@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db, auth } from "./firebase"; 
-import { collection, onSnapshot, addDoc, updateDoc, doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc } from "firebase/firestore";
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 const CLOUD_NAME = "dp4m3p0do"; 
@@ -22,7 +22,6 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [fullscreenIndex, setFullscreenIndex] = useState(null);
 
-  // NUEVOS ESTADOS: Para registrar dónde empieza y termina el toque en el celular
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
@@ -76,7 +75,21 @@ export default function App() {
       setTempImages(tempImages.filter((_, i) => i !== index));
     } else {
       const updatedImages = editing.imagenes.filter((_, i) => i !== index);
-      setEditing({ ...editing, images: updatedImages });
+      setEditing({ ...editing, imagenes: updatedImages });
+    }
+  };
+
+  // NUEVA FUNCIÓN PARA ELIMINAR LA CASA COMPLETAMENTE
+  const deleteHouse = async (houseId) => {
+    if (!window.confirm("¿Estás completamente seguro de que deseas eliminar esta propiedad del catálogo? Esta acción no se puede deshacer.")) return;
+    try {
+      await deleteDoc(doc(db, "houses", houseId));
+      setShowModal(false);
+      setEditing(null);
+      setTempImages([]);
+      setSelectedHouse(null);
+    } catch (err) {
+      alert("Error al intentar eliminar la propiedad");
     }
   };
 
@@ -111,7 +124,6 @@ export default function App() {
     }
   };
 
-  // NAVEGACIÓN ENTRE FOTOS
   const nextImage = (e) => {
     if (e) e.stopPropagation();
     if (selectedHouse?.imagenes && fullscreenIndex < selectedHouse.imagenes.length - 1) {
@@ -126,7 +138,6 @@ export default function App() {
     }
   };
 
-  // LOGICA PARA DETECTAR DESLIZAMIENTO CON EL DEDO (SWIPE)
   const handleTouchStart = (e) => {
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -138,13 +149,12 @@ export default function App() {
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;  // Deslizar a la izquierda (Siguiente)
-    const isRightSwipe = distance < -50; // Deslizar a la derecha (Anterior)
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
 
     if (isLeftSwipe) nextImage();
     if (isRightSwipe) prevImage();
 
-    // Resetear valores para el siguiente deslizamiento
     setTouchStart(null);
     setTouchEnd(null);
   };
@@ -265,7 +275,6 @@ export default function App() {
         </div>
       )}
 
-      {/* PANTALLA COMPLETA TOTALMENTE FLUIDA CON SOPORTE PARA DESLIZAR DEDO (TOUCH EVENTS) */}
       {fullscreenIndex !== null && selectedHouse?.imagenes && (
         <div 
           style={s.fullscreenOverlay} 
@@ -276,7 +285,6 @@ export default function App() {
         >
           <button style={s.fullscreenCloseBtn} onClick={() => setFullscreenIndex(null)}>✕</button>
           
-          {/* Flechas visibles en PC, en celular se puede usar el dedo */}
           {fullscreenIndex > 0 && !isMobile && (
             <button style={{...s.navBtn, left: '20px'}} onClick={prevImage}>◀</button>
           )}
@@ -337,7 +345,20 @@ export default function App() {
               <textarea name="amenidades" placeholder="Amenidades..." defaultValue={editing?.amenidades} style={{...s.input, gridColumn: 'span 2', height: '40px'}} />
               <textarea name="descripcion" placeholder="Descripción..." defaultValue={editing?.descripcion} style={{...s.input, gridColumn: 'span 2', height: '60px'}} />
             </div>
+            
             <button type="submit" style={s.btnPrimary}>Guardar Cambios</button>
+            
+            {/* NUEVO BOTÓN EN ROJO: Solo se muestra si estamos editando una casa existente */}
+            {editing && (
+              <button 
+                type="button" 
+                onClick={() => deleteHouse(editing.id)} 
+                style={s.btnDelete}
+              >
+                Eliminar Propiedad
+              </button>
+            )}
+            
             <button type="button" onClick={() => {setShowModal(false); setTempImages([]); setEditing(null)}} style={s.btnCancel}>Cancelar</button>
           </form>
         </div>
@@ -401,5 +422,8 @@ const s = {
   fullscreenImg: { maxWidth: '95%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '4px', userSelect: 'none', pointerEvents: 'none' },
   fullscreenCloseBtn: { position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '20px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100 },
   navBtn: { position: 'absolute', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', color: 'white', border: 'none', borderRadius: '50%', width: '50px', height: '50px', fontSize: '24px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2100, userSelect: 'none' },
-  photoCounter: { position: 'absolute', top: '25px', left: '50%', transform: 'translateX(-50%)', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '15px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' }
+  photoCounter: { position: 'absolute', top: '25px', left: '50%', transform: 'translateX(-50%)', color: 'white', background: 'rgba(0,0,0,0.5)', padding: '5px 15px', borderRadius: '15px', fontSize: '14px', fontWeight: 'bold', textAlign: 'center' },
+  
+  // ESTILO ESTÉTICO EN ROJO PARA EL BOTÓN DE ELIMINAR CASAS
+  btnDelete: { width: '100%', background: '#D32F2F', color: 'white', padding: '14px', borderRadius: '12px', border: 'none', fontWeight: 'bold', marginTop: '10px', cursor: 'pointer' }
 };
